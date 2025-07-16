@@ -16,7 +16,7 @@ WORKDIR /app
 
 # COPY ./static_frontend /app
 # same destination is /app
-COPY ./static_frontend .
+COPY ./src .
 
 
 # docker build -f Dockerfile -t dockerhub_name/pyapp:latest .

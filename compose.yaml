@@ -1,11 +1,42 @@
 services: # docker compose expects this
+  backend: # custom key name
+    # image: python:3.13.4-slim-bullseye
+    build: 
+      context: ./backend  
+      dockerfile: Dockerfile
+
+    ports:
+      - 8080:8000
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # if u dont really care if somebody has it u can use them here (eg. PORT=8000)
+    environment:
+      - PORT=8000
+      - MY_PROJECT=HelloWorld
+    # the api_keys will be stored in the env file
+    env_file:
+      - .env
+    # volumes:
+    #   - ./backend/src:/app
+    develop:
+      watch:
+        - action : rebuild
+          path : backend/requirements.txt
+        - action : rebuild
+          path : backend/Dockerfile
+        # - action : sync
+        - action : restart
+          path : backend/src/
+          # target : /app
+
   app: # custom key name
     # image: python:3.13.4-slim-bullseye
     build: 
-      context: .
-      dockerfile: Dockerfile
+      context: ./static_frontend
+      dockerfile: static.Dockerfile
 
     ports:
       - 8000:8000
       - 3000:8000
     command: python -m http.server 8000
+    volumes:
+      - ./static_frontend/src:/app
