@@ -11,11 +11,13 @@ WORKDIR /app
 
 
 # Copy local_folder/file container_destination
-COPY requirements.txt tmp/requirements.txt
+COPY requirements.txt .
 
 # run within container while building
-RUN pip install -r tmp/requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY ./src .
 
-CMD ["python", "-m", "http.server", "8000"]
+
+# Start the FastAPI app using uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

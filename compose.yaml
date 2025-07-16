@@ -6,8 +6,8 @@ services: # docker compose expects this
       dockerfile: Dockerfile
 
     ports:
-      - 8080:8000
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - 8000:8000
+    # command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     # if u dont really care if somebody has it u can use them here (eg. PORT=8000)
     environment:
       - PORT=8000
@@ -35,7 +35,7 @@ services: # docker compose expects this
       dockerfile: static.Dockerfile
 
     ports:
-      - 8000:8000
+      # - 8000:8000
       - 3000:8000
     command: python -m http.server 8000
     volumes:
