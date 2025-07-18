@@ -1,13 +1,13 @@
 services: # docker compose expects this
   backend: # custom key name
-    # image: python:3.13.4-slim-bullseye
+    image: python:3.13.4-slim-bullseye
     build: 
       context: ./backend  
       dockerfile: Dockerfile
 
     ports:
       - 8000:8000
-    # command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     # if u dont really care if somebody has it u can use them here (eg. PORT=8000)
     environment:
       - PORT=8000
@@ -15,8 +15,8 @@ services: # docker compose expects this
     # the api_keys will be stored in the env file
     env_file:
       - .env
-    # volumes:
-    #   - ./backend/src:/app
+    volumes:
+      - ./backend/src:/app
     develop:
       watch:
         - action : rebuild

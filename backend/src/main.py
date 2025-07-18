@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from api.db import init_db
+from api.chat.routing import router as ChatRouter
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -12,6 +13,7 @@ async def lifespan(app:FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(ChatRouter, prefix="/api/chat")
 
 MY_PROJECT = os.environ.get("MY_PROJECT") or "This is my project"
 API_KEY = os.environ.get("API_KEY")
