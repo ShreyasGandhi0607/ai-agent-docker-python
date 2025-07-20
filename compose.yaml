@@ -1,34 +1,33 @@
-services: # docker compose expects this
-  backend: # custom key name
+services:
+  backend:
     image: python:3.13.4-slim-bullseye
     build: 
       context: ./backend  
       dockerfile: Dockerfile
-
     ports:
       - 8000:8000
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    # if u dont really care if somebody has it u can use them here (eg. PORT=8000)
     environment:
       - PORT=8000
       - MY_PROJECT=HelloWorld
-    # the api_keys will be stored in the env file
+      # Add the crucial DATABASE_URL environment variable
+      - DATABASE_URL=postgresql+psycopg://dbuser:dbpassword@db_service:5432/mydb
     env_file:
       - .env
     volumes:
       - ./backend/src:/app
+    depends_on:
+      db_service:
+        condition: service_healthy  # Wait for database health check
     develop:
       watch:
-        - action : rebuild
-          path : backend/requirements.txt
-        - action : rebuild
-          path : backend/Dockerfile
-        # - action : sync
-        - action : restart
-          path : backend/src/
-          # target : /app
-  
-  # DATABASE_URL=postgresql+psycopg://username:password@dbhost:dbport/dbname
+        - action: rebuild
+          path: backend/requirements.txt
+        - action: rebuild
+          path: backend/Dockerfile
+        - action: restart
+          path: backend/src/
+
   db_service:
     image: postgres:17.5-alpine
     ports:
@@ -37,25 +36,24 @@ services: # docker compose expects this
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=dbpassword
       - POSTGRES_DB=mydb
-    # env_file:
-    #   - .env
     volumes:
       - dc_managed_db_volume:/var/lib/postgresql/data
-    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d mydb -U dbuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-
-  app: # custom key name
-    # image: python:3.13.4-slim-bullseye
+  app:
     build: 
       context: ./static_frontend
       dockerfile: static.Dockerfile
-
     ports:
-      # - 8000:8000
       - 3000:8000
     command: python -m http.server 8000
     volumes:
       - ./static_frontend/src:/app
 
 volumes:
-  dc_managed_db_volume: 
+  dc_managed_db_volume:
