@@ -1,0 +1,118 @@
+# Docker Compose file format version - defines which features are available
+# Modern Docker installations support this format without explicit versioning
+# services: is the top-level key required by Docker Compose
+services: # Docker Compose expects this top-level key to define all containers
+
+  # Backend Service Configuration
+  backend: # Custom service name - can be any descriptive name you choose
+    # Base image to use if not building from Dockerfile
+    image: python:3.13.4-slim-bullseye
+    
+    # Build configuration - tells Docker to build an image from source
+    build: 
+      context: ./backend    # Directory containing the Dockerfile and source code
+      dockerfile: Dockerfile # Specifies which Dockerfile to use (default: Dockerfile)
+
+    # Port mapping: host_port:container_port
+    # Maps port 8000 on your host machine to port 8000 inside the container
+    ports:
+      - 8000:8000
+
+    # Override the default command from Dockerfile
+    # Starts FastAPI with hot reload for development
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    
+    # Environment variables set directly in the compose file
+    # If you don't care about security, you can hardcode them here
+    environment:
+      - PORT=8000                    # Application port configuration
+      - MY_PROJECT=HelloWorld        # Project name variable
+      # Database connection string - uses service name 'db_service' as hostname
+      - DATABASE_URL=postgresql+psycopg://dbuser:dbpassword@db_service:5432/mydb
+    
+    # External environment file for sensitive data like API keys
+    # The API keys and secrets will be stored in the .env file
+    env_file:
+      - .env
+
+    # Volume mounting: host_path:container_path
+    # Mounts local source code into container for live development
+    volumes:
+      - ./backend/src:/app
+
+    # Service dependencies - ensures proper startup order
+    depends_on:
+      db_service:
+        condition: service_healthy  # Wait for database health check to pass
+
+    # Development mode configuration for file watching
+    develop:
+      watch:
+        # Rebuild entire container when these files change
+        - action: rebuild
+          path: backend/requirements.txt  # Python dependencies changed
+        - action: rebuild
+          path: backend/Dockerfile        # Docker configuration changed
+        # Restart the service when source code changes (faster than rebuild)
+        - action: restart
+          path: backend/src/              # Source code directory
+          # target: /app                  # Optional: specify container target path
+
+  # Database Service Configuration
+  # Connection string format: postgresql+psycopg://username:password@hostname:port/database
+  db_service: # PostgreSQL database service
+    # Official PostgreSQL image with Alpine Linux (smaller size)
+    image: postgres:17.5-alpine
+    
+    # Port mapping - maps host port 5433 to container port 5432
+    # Using 5433 on host to avoid conflicts with local PostgreSQL installations
+    ports:
+      - "5433:5432"  # host_port:container_port (quotes prevent YAML interpretation as time)
+    
+    # Database configuration through environment variables
+    environment:
+      - POSTGRES_USER=dbuser         # Database username
+      - POSTGRES_PASSWORD=dbpassword # Database password
+      - POSTGRES_DB=mydb            # Initial database name to create
+    
+    # Alternative: load environment from file (commented out)
+    # env_file:
+    #   - .env
+
+    # Persistent data storage
+    # Maps named volume to PostgreSQL data directory for persistence
+    volumes:
+      - dc_managed_db_volume:/var/lib/postgresql/data
+    
+    # Health check configuration - ensures database is ready before dependent services start
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d mydb -U dbuser"]  # Command to test database readiness
+      interval: 10s      # How often to run the health check
+      timeout: 5s        # How long to wait for the health check command
+      retries: 5         # Number of consecutive failures before marking as unhealthy
+      start_period: 30s  # Grace period before health checks start
+
+  # Frontend/Static File Service Configuration
+  app: # Custom service name for static frontend
+    # Build configuration for static content
+    build: 
+      context: ./static_frontend     # Directory containing static files and Dockerfile
+      dockerfile: static.Dockerfile  # Specific Dockerfile for static content
+
+    # Port mapping for frontend service
+    # Maps host port 3000 to container port 8000
+    ports:
+      - 3000:8000  # Access frontend at http://localhost:3000
+
+    # Command to serve static files using Python's built-in HTTP server
+    command: python -m http.server 8000
+    
+    # Mount static files for live development updates
+    volumes:
+      - ./static_frontend/src:/app
+
+# Named volumes section - defines persistent storage
+volumes:
+  # Named volume for PostgreSQL data persistence
+  # Data survives container restarts and removals
+  dc_managed_db_volume:  # Volume name - can be referenced by services above
