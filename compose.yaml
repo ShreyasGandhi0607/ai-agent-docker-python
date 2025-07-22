@@ -11,7 +11,7 @@ services:
       - PORT=8000
       - MY_PROJECT=HelloWorld
       # Add the crucial DATABASE_URL environment variable
-      - DATABASE_URL=postgresql+psycopg://dbuser:dbpassword@db_service:5432/mydb
+      # - DATABASE_URL=postgresql+psycopg://dbuser:dbpassword@db_service:5432/mydb  
     env_file:
       - .env
     volumes:
@@ -29,7 +29,7 @@ services:
           path: backend/src/
 
   db_service:
-    image: postgres:17.5-alpine
+    image: postgres:16-alpine
     ports:
       - "5433:5432"
     environment:
@@ -45,15 +45,15 @@ services:
       retries: 5
       start_period: 30s
 
-  app:
-    build: 
-      context: ./static_frontend
-      dockerfile: static.Dockerfile
-    ports:
-      - 3000:8000
-    command: python -m http.server 8000
-    volumes:
-      - ./static_frontend/src:/app
+  # app:
+  #   build: 
+  #     context: ./static_frontend
+  #     dockerfile: static.Dockerfile
+  #   ports:
+  #     - 3000:8000
+  #   command: python -m http.server 8000
+  #   volumes:
+  #     - ./static_frontend/src:/app
 
 volumes:
   dc_managed_db_volume:
