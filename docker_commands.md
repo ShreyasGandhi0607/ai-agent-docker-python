@@ -69,7 +69,7 @@ _From host terminal_
 curl http://localhost:12434/engines/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "ai/gemma3",
+        "model": "ai/gemma3:1B-F16",
         "messages": [
             {
                 "role": "system",
@@ -89,7 +89,7 @@ _From within a container_
 curl http://model-runner.docker.internal/engines/v1/chat/completions \
     -H "Content-Type: application/json" \
     -d '{
-        "model": "ai/gemma3",
+        "model": "ai/gemma3:1B-F16",
         "messages": [
             {
                 "role": "system",

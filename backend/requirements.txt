@@ -3,3 +3,5 @@ uvicorn[standard]
 requests
 sqlmodel #sqlite mysql postgres mariadb
 psycopg[binary] # specifically for postgres with python
+langchain
+langchain-openai

@@ -24,6 +24,5 @@ if not API_KEY:
 def index():
     return {
         'message':"Hello world from fastapi!",
-        'project_name':MY_PROJECT,
-        "API_KEY" : API_KEY
+        'project_name':MY_PROJECT
         }
