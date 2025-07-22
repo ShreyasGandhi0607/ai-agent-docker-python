@@ -1,1 +1,8 @@
-src/ignoreme
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.env
+*.DS_Store
+ignoreme/

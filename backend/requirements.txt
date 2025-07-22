@@ -5,3 +5,4 @@ sqlmodel #sqlite mysql postgres mariadb
 psycopg[binary] # specifically for postgres with python
 langchain
 langchain-openai
+langchain-google-genai
