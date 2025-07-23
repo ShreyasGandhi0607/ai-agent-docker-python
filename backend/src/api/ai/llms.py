@@ -7,11 +7,12 @@ if not GOOGLE_API_KEY:
 
 
 
-def get_openai_llm():
+def get_gemini_llm():
     gemini_params = {
         "model" : "gemini-2.0-flash",
         "api_key" : GOOGLE_API_KEY,
-        "temperature" : 0,
+        "convert_system_message_to_human": True,
+        "temperature": 0.7
     }
 
     return ChatGoogleGenerativeAI(**gemini_params)
