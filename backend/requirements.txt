@@ -4,6 +4,8 @@ requests
 sqlmodel #sqlite mysql postgres mariadb
 psycopg[binary] # specifically for postgres with python
 langchain
+langgraph
+langgraph-supervisor
 langchain-openai
 langchain-google-genai
 langchain-core
