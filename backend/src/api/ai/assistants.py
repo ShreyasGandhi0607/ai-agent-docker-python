@@ -1,44 +1,59 @@
 from api.ai.llms import get_gemini_llm
+from langchain_core.messages import AIMessage
 from api.ai.tools import (
     send_me_email,
     get_unread_emails
 )
-from langchain_core.messages import AIMessage
+from api.ai.services import generate_email_message  # assume this exists
 
 EMAIL_TOOLS = {
     "send_me_email" : send_me_email,
     "get_unread_emails" : get_unread_emails
 }
 
-def email_assistant(query:str):
-    # llm = llm_base.bind_tools([send_me_email, get_unread_emails])
-    llm = get_gemini_llm().bind_tools(list(EMAIL_TOOLS.values()))
+def email_assistant(query: str):
+    llm_base = get_gemini_llm()
+    llm = llm_base.bind_tools(list(EMAIL_TOOLS.values()))
 
     messages = [
-        ("system", "You are an helpful assistant for managing my email inbox."),
+        (
+            "system",
+            "You are an AI assistant that helps manage a user's inbox. "
+            "You can send emails using the `send_me_email` tool, and check unread emails with `get_unread_emails`. "
+            "Use tools when appropriate. If needed, ask for more details or create them."
+        ),
         ("human", query)
     ]
 
     response = llm.invoke(messages)
     messages.append(response)
 
-    # Manually handle tool calls if present
-    if isinstance(response, AIMessage) and getattr(response, "tool_calls", None):
-        results = []
+        # Existing tool call handling...
+    if hasattr(response, "tool_calls") and response.tool_calls:
         for tool_call in response.tool_calls:
-            name = tool_call.get("name")
-            args = tool_call.get("args", {})
-            func = EMAIL_TOOLS.get(name)
-            if not func:
+            tool_name = tool_call.get("name")
+            tool_func = EMAIL_TOOLS.get(tool_name)
+
+            if not tool_func:
                 continue
-            try:
-                out = func.invoke(args)
-            except Exception as e:
-                out = f"Error in {name}: {e}"
-            results.append({"tool": name, "result": out})
 
-        # return the tool outputs directly
-        return results[0] if len(results) == 1 else results
+            if tool_name == "send_me_email":
+                generated = generate_email_message(query)
+                subject = generated.subject or "No Subject"
+                content = generated.content or "No content"
+                tool_result = tool_func.invoke({"subject": subject, "content": content})
+            else:
+                tool_result = tool_func.invoke()
 
-    # No tools invoked: just return the model’s text reply
-    return response.content if hasattr(response, "content") else str(response)
+            messages.append(AIMessage(content=str(tool_result)))
+
+        final_response = llm.invoke(messages)
+        return final_response
+
+    # ✅ NEW: If LLM doesn't call tools, do it manually
+    else:
+        generated = generate_email_message(query)
+        subject = generated.subject or "No Subject"
+        content = generated.content or "No content"
+        tool_result = send_me_email.invoke({"subject": subject, "content": content})
+        return AIMessage(content=f"Email sent with subject: {subject}")

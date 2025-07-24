@@ -2,20 +2,40 @@ from langchain_core.tools import tool
 
 from api.myemailer.sender import send_mail
 from api.myemailer.inbox_reader import read_inbox
+from api.ai.services import generate_email_message
+
 
 @tool
-def send_me_email(subject:str, content:str) -> str:
+def research_email(query:str,):
     """
-    Send an email to myself with a subject and content.
+    Perform a research based on the query.
+    Arguments:
+    - query : str - Topic of research
+    """
+    print(f"[RESEARCH TOOL] Invoked with query: {query}")
+    try:
+        response = generate_email_message(query)
+        # msg = f"Subject: {response.subject}\nBody: {response.content}"
+        msg = {'subject' : f'{response.subject}','body':f'{response.content}'}
+        return msg
+    except Exception as e:
+        return f"[RESEARCH TOOL] Error: {str(e)}"
+
+@tool
+def send_me_email(subject:str, body:str) -> str:
+    """
+    Send an email to myself with a subject and content received from the research_agent.
 
     Arguments:
     - subject: str - Text subject of the email
-    - content: str - Text body content of the email
+    - body: str - Text body content of the email
     """
     try:
-        send_mail(subject=subject, content=content)
-    except:
+        send_mail(subject=subject, content=body)
+    except Exception as e:
+        print("[ERROR] Failed to send email:", e)
         return "Not sent"
+    print("Sent Mail")
     return "Sent email"
 
 @tool
