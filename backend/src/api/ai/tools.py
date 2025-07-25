@@ -1,5 +1,6 @@
 from langchain_core.tools import tool
-
+# from langchain_core.runnables import RunnableConfig
+# not gonna use runnables in this project
 from api.myemailer.sender import send_mail
 from api.myemailer.inbox_reader import read_inbox
 from api.ai.services import generate_email_message
